@@ -229,10 +229,11 @@
     debounceTimer = setTimeout(() => {
       const callbackName = "suggestCallback_" + Date.now();
       window[callbackName] = (data) => {
-        renderSuggestions(data[1] || []);
+        if (data && Array.isArray(data[1])) renderSuggestions(data[1]);
         delete window[callbackName];
       };
       const script = document.createElement("script");
+      script.onerror = () => { delete window[callbackName]; };
       script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=${callbackName}`;
       document.body.appendChild(script);
     }, 200);
