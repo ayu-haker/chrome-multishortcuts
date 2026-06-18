@@ -217,6 +217,7 @@
   }
 
   let debounceTimer;
+  let fetchingSuggestions = false;
 
   searchInput.addEventListener("input", () => {
     clearTimeout(debounceTimer);
@@ -227,13 +228,17 @@
       return;
     }
     debounceTimer = setTimeout(() => {
-      const script = document.createElement("script");
+      if (fetchingSuggestions) return;
+      fetchingSuggestions = true;
       const callbackName = "suggestCallback_" + Date.now();
+      const script = document.createElement("script");
       window[callbackName] = (data) => {
         renderSuggestions(data[1] || []);
         delete window[callbackName];
-        document.body.removeChild(script);
+        if (script.parentNode) script.parentNode.removeChild(script);
+        fetchingSuggestions = false;
       };
+      script.onerror = () => { fetchingSuggestions = false; };
       script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=${callbackName}`;
       document.body.appendChild(script);
     }, 200);
@@ -256,18 +261,14 @@
       if (items.length === 0) return;
       suggestionIndex = Math.min(suggestionIndex + 1, items.length - 1);
       highlightSuggestion(suggestionIndex);
-      searchInput.value = suggestionData[suggestionIndex];
+      if (suggestionIndex >= 0) searchInput.value = suggestionData[suggestionIndex];
     }
     if (e.key === "ArrowUp") {
       e.preventDefault();
       if (items.length === 0) return;
       suggestionIndex = Math.max(suggestionIndex - 1, -1);
       highlightSuggestion(suggestionIndex);
-      if (suggestionIndex >= 0) {
-        searchInput.value = suggestionData[suggestionIndex];
-      } else {
-        searchInput.value = searchInput.dataset.lastManual || "";
-      }
+      if (suggestionIndex >= 0) searchInput.value = suggestionData[suggestionIndex];
     }
     if (e.key === "Escape") {
       suggestionsEl.classList.remove("active");
