@@ -59,6 +59,39 @@
       color: rgba(255,255,255,0.4);
       font-size: 18px;
     }
+    .suggestions {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #1e1e3a;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      overflow: hidden;
+      display: none;
+      z-index: 50;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .suggestions.active { display: block; }
+    .suggestions .suggestion-item {
+      padding: 10px 16px 10px 48px;
+      cursor: pointer;
+      color: rgba(255,255,255,0.8);
+      font-size: 14px;
+      transition: 0.15s;
+    }
+    .suggestions .suggestion-item:hover,
+    .suggestions .suggestion-item.highlighted {
+      background: rgba(108,99,255,0.15);
+    }
+    .suggestions .suggestion-item .query {
+      color: #fff;
+    }
+    .suggestions .suggestion-item .type {
+      font-size: 10px;
+      color: rgba(255,255,255,0.3);
+      margin-left: 8px;
+    }
     .shortcuts-container {
       width: 100%;
       max-width: 800px;
@@ -264,7 +297,8 @@
 
   <div class="search-bar">
     <span class="icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Search Google or type a URL...">
+    <input type="text" id="searchInput" placeholder="Search Google or type a URL..." autocomplete="off">
+    <div class="suggestions" id="suggestions"></div>
   </div>
 
   <div class="shortcuts-container">
