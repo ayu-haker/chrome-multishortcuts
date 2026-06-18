@@ -235,7 +235,7 @@
       window[callbackName] = (data) => {
         renderSuggestions(data[1] || []);
         delete window[callbackName];
-        try { script.remove(); } catch (e) {}
+        script.remove();
         fetchingSuggestions = false;
       };
       script.onerror = () => { fetchingSuggestions = false; };
