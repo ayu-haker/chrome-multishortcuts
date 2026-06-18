@@ -31,11 +31,8 @@
   const count = document.getElementById("count");
   const counter = document.getElementById("counter");
   const searchInput = document.getElementById("searchInput");
-  const suggestionsEl = document.getElementById("suggestions");
   const timeEl = document.getElementById("time");
   const dateEl = document.getElementById("date");
-  let suggestionIndex = -1;
-  let suggestionData = [];
 
   function loadShortcuts() {
     const data = localStorage.getItem(STORAGE_KEY);
@@ -169,117 +166,19 @@
   modalName.addEventListener("keydown", (e) => { if (e.key === "Enter") modalUrl.focus(); });
   modalUrl.addEventListener("keydown", (e) => { if (e.key === "Enter") saveModal(); });
 
-  // Search suggestions
-  function goToQuery(query) {
-    if (!query) return;
-    if (query.includes(".") && !query.includes(" ")) {
-      let url = query;
-      if (!url.startsWith("http://") && !url.startsWith("https://")) url = "https://" + url;
-      window.location.href = url;
-    } else {
-      window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-    }
-  }
-
-  function selectSuggestion(index) {
-    if (index >= 0 && index < suggestionData.length) {
-      const q = suggestionData[index];
-      searchInput.value = q;
-      goToQuery(q);
-    }
-  }
-
-  function highlightSuggestion(index) {
-    document.querySelectorAll(".suggestion-item").forEach((el, i) => {
-      el.classList.toggle("highlighted", i === index);
-    });
-  }
-
-  function renderSuggestions(items) {
-    suggestionData = items;
-    suggestionsEl.innerHTML = "";
-    if (!items || items.length === 0) {
-      suggestionsEl.classList.remove("active");
-      return;
-    }
-    items.forEach((item, i) => {
-      const div = document.createElement("div");
-      div.className = "suggestion-item";
-      div.innerHTML = `<span class="query">${item}</span><span class="type">search</span>`;
-      div.addEventListener("click", () => selectSuggestion(i));
-      div.addEventListener("mouseenter", () => {
-        suggestionIndex = i;
-        highlightSuggestion(i);
-      });
-      suggestionsEl.appendChild(div);
-    });
-    suggestionsEl.classList.add("active");
-  }
-
-  let debounceTimer;
-
-  searchInput.addEventListener("input", () => {
-    clearTimeout(debounceTimer);
-    const query = searchInput.value.trim();
-    if (query.length < 2) {
-      suggestionsEl.classList.remove("active");
-      suggestionIndex = -1;
-      return;
-    }
-    debounceTimer = setTimeout(() => {
-      const callbackName = "suggestCallback_" + Date.now();
-      window[callbackName] = (data) => {
-        if (data && Array.isArray(data[1])) renderSuggestions(data[1]);
-        delete window[callbackName];
-      };
-      const script = document.createElement("script");
-      script.onerror = () => { delete window[callbackName]; };
-      script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=${callbackName}`;
-      document.body.appendChild(script);
-    }, 200);
-  });
-
+  // Search
   searchInput.addEventListener("keydown", (e) => {
-    const items = document.querySelectorAll(".suggestion-item");
     if (e.key === "Enter") {
-      if (suggestionIndex >= 0 && items[suggestionIndex]) {
-        selectSuggestion(suggestionIndex);
+      const query = searchInput.value.trim();
+      if (!query) return;
+      if (query.includes(".") && !query.includes(" ")) {
+        let url = query;
+        if (!url.startsWith("http://") && !url.startsWith("https://")) url = "https://" + url;
+        window.location.href = url;
       } else {
-        goToQuery(searchInput.value.trim());
+        window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
       }
-      suggestionsEl.classList.remove("active");
-      suggestionIndex = -1;
-      return;
     }
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      if (items.length === 0) return;
-      suggestionIndex = Math.min(suggestionIndex + 1, items.length - 1);
-      highlightSuggestion(suggestionIndex);
-      if (suggestionIndex >= 0) searchInput.value = suggestionData[suggestionIndex];
-    }
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      if (items.length === 0) return;
-      suggestionIndex = Math.max(suggestionIndex - 1, -1);
-      highlightSuggestion(suggestionIndex);
-      if (suggestionIndex >= 0) searchInput.value = suggestionData[suggestionIndex];
-    }
-    if (e.key === "Escape") {
-      suggestionsEl.classList.remove("active");
-      suggestionIndex = -1;
-    }
-  });
-
-  searchInput.addEventListener("blur", () => {
-    setTimeout(() => {
-      suggestionsEl.classList.remove("active");
-      suggestionIndex = -1;
-    }, 200);
-  });
-
-  searchInput.addEventListener("focus", () => {
-    if (suggestionData.length > 0) suggestionsEl.classList.add("active");
   });
 
   // Clock
