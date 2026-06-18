@@ -217,7 +217,6 @@
   }
 
   let debounceTimer;
-  let fetchingSuggestions = false;
 
   searchInput.addEventListener("input", () => {
     clearTimeout(debounceTimer);
@@ -228,17 +227,12 @@
       return;
     }
     debounceTimer = setTimeout(() => {
-      if (fetchingSuggestions) return;
-      fetchingSuggestions = true;
       const callbackName = "suggestCallback_" + Date.now();
-      const script = document.createElement("script");
       window[callbackName] = (data) => {
         renderSuggestions(data[1] || []);
         delete window[callbackName];
-        script.remove();
-        fetchingSuggestions = false;
       };
-      script.onerror = () => { fetchingSuggestions = false; };
+      const script = document.createElement("script");
       script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=${callbackName}`;
       document.body.appendChild(script);
     }, 200);
